@@ -21,7 +21,6 @@ data class UserCreatedEvent(
 data class UserChangedEvent(
     val userId: UUID,
     val userName: String,
-    val userNickname: String,
     val userPassword: String
 ) : Event<UserAggregate>(
     name = USER_CHANGED,

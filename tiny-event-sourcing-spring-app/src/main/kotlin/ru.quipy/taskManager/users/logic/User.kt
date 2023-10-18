@@ -26,10 +26,9 @@ class User : AggregateState<UUID, UserAggregate> {
     fun changeUser(
         id: UUID = UUID.randomUUID(),
         userName: String,
-        userNickname: String,
         userPassword: String
     ): UserChangedEvent {
-        return UserChangedEvent(id, userName, userNickname, userPassword)
+        return UserChangedEvent(id, userName, userPassword)
     }
 
     @StateTransitionFunc
@@ -44,7 +43,6 @@ class User : AggregateState<UUID, UserAggregate> {
     fun changeUser(event: UserChangedEvent) {
         userId = event.userId
         userName = event.userName
-        userNickname = event.userNickname
         userPassword = event.userPassword
     }
 }

@@ -11,12 +11,14 @@ import ru.quipy.taskManager.users.api.UserAggregate
 import ru.quipy.taskManager.users.api.UserChangedEvent
 import ru.quipy.taskManager.users.api.UserCreatedEvent
 import ru.quipy.taskManager.users.logic.User
+import ru.quipy.taskManager.users.service.UserService
 import java.util.*
 
 @RestController
 @RequestMapping("/users")
 class UserController(
-    val usersEsService: EventSourcingService<UUID, UserAggregate, User>
+    val usersEsService: EventSourcingService<UUID, UserAggregate, User>,
+    val userService: UserService
 ) {
 
     @PostMapping("/create")
@@ -25,6 +27,7 @@ class UserController(
         @RequestParam userNickname: String,
         @RequestParam userPassword: String
     ): UserCreatedEvent {
+        if (!userService.checkIfNicknameAvailable(userNickname)) throw IllegalArgumentException("Nickname already taken")
         return usersEsService.create {
             it.createNewUser(
                 userName = userName,
@@ -32,6 +35,16 @@ class UserController(
                 userPassword = userPassword
             )
         }
+    }
+
+    @GetMapping("/nickname")
+    fun getNicknameAvailable(@RequestParam userNickname: String): Boolean {
+        return userService.checkIfNicknameAvailable(userNickname)
+    }
+
+    @GetMapping("/search/name")
+    fun getUsersNameContain(@RequestParam query: String): List<User> {
+        return userService.searchUsersNameContains(query).mapNotNull { usersEsService.getState(it) }
     }
 
     @GetMapping("/{userId}")
@@ -42,13 +55,11 @@ class UserController(
     @PostMapping("/change")
     fun changeUser(
         @RequestParam userName: String,
-        @RequestParam userNickname: String,
         @RequestParam userPassword: String
     ): UserChangedEvent {
         return usersEsService.create {
             it.changeUser(
                 userName = userName,
-                userNickname = userNickname,
                 userPassword = userPassword
             )
         }

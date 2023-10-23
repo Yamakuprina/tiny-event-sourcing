@@ -13,6 +13,7 @@ class User : AggregateState<UUID, UserAggregate> {
     private lateinit var userNickname: String
     private lateinit var userPassword: String
     override fun getId() = userId
+    fun getName() = userName
 
     fun createNewUser(
         id: UUID = UUID.randomUUID(),

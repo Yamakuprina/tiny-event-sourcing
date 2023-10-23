@@ -13,6 +13,8 @@ class Task : AggregateState<UUID, TaskAggregate> {
     private var description: String? = null
     private var assignee: UUID? = null
     override fun getId() = taskId
+    fun getProjectId() = projectId
+    fun getStatusId() = statusId
 
     fun createNewTask(
         id: UUID = UUID.randomUUID(),

@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.quipy.core.EventSourcingService
-import ru.quipy.taskManager.tasks.api.TaskAggregate
-import ru.quipy.taskManager.tasks.api.TaskCreatedEvent
+import ru.quipy.taskManager.projects.api.ProjectAggregate
+import ru.quipy.taskManager.projects.logic.Project
+import ru.quipy.taskManager.tasks.api.*
 import ru.quipy.taskManager.tasks.logic.Task
 import ru.quipy.taskManager.tasks.service.TaskService
 import java.util.*
@@ -18,6 +19,7 @@ import java.util.*
 @RequestMapping("/tasks")
 class TaskController(
     val tasksEsService: EventSourcingService<UUID, TaskAggregate, Task>,
+    val projectsEsService: EventSourcingService<UUID, ProjectAggregate, Project>,
     val taskService: TaskService
 ) {
 
@@ -29,6 +31,7 @@ class TaskController(
         @RequestParam assignee: UUID?,
         @RequestParam description: String?
     ): TaskCreatedEvent {
+        projectsEsService.getState(projectId)?.incrementStatusTasks(statusId)
         return tasksEsService.create {
             it.createNewTask(
                 projectId = projectId,
@@ -44,8 +47,10 @@ class TaskController(
     fun changeTaskAssignee(
         @PathVariable taskId: String,
         @RequestParam assignee: UUID,
-    ) {
-        tasksEsService.update(UUID.fromString(taskId)) {
+    ): TaskAssigneeChangedEvent {
+        if (tasksEsService.getState(UUID.fromString(taskId)) == null)
+            throw IllegalArgumentException("Task not found")
+        return tasksEsService.update(UUID.fromString(taskId)) {
             it.changeAssignee(
                 id = UUID.fromString(taskId),
                 assignee = assignee,
@@ -57,8 +62,10 @@ class TaskController(
     fun deleteTaskAssignee(
         @PathVariable taskId: String,
         @RequestParam assignee: UUID,
-    ) {
-        tasksEsService.update(UUID.fromString(taskId)) {
+    ): TaskRemoveAssignmentEvent {
+        if (tasksEsService.getState(UUID.fromString(taskId)) == null)
+            throw IllegalArgumentException("Task not found")
+        return tasksEsService.update(UUID.fromString(taskId)) {
             it.removeAssignee(UUID.fromString(taskId))
         }
     }
@@ -95,8 +102,11 @@ class TaskController(
     fun changeTaskStatus(
         @PathVariable taskId: String,
         @RequestParam statusId: UUID,
-    ) {
-        tasksEsService.update(UUID.fromString(taskId)) {
+    ): TaskChangeStatusEvent {
+        val task = tasksEsService.getState(UUID.fromString(taskId)) ?: throw IllegalArgumentException("Task not found")
+        task.getProjectId()?.let { projectsEsService.getState(it)?.decrementStatusTasks(task.getStatusId()) }
+        task.getProjectId()?.let { projectsEsService.getState(it)?.incrementStatusTasks(statusId) }
+        return tasksEsService.update(UUID.fromString(taskId)) {
             it.updateStatus(
                 id = UUID.fromString(taskId),
                 newStatusId = statusId
@@ -108,8 +118,10 @@ class TaskController(
     fun changeTaskDescription(
         @PathVariable taskId: String,
         @RequestParam description: String,
-    ) {
-        tasksEsService.update(UUID.fromString(taskId)) {
+    ): TaskDescriptionChanged {
+        if (tasksEsService.getState(UUID.fromString(taskId)) == null)
+            throw IllegalArgumentException("Task not found")
+        return tasksEsService.update(UUID.fromString(taskId)) {
             it.changeDescription(
                 description = description
             )
@@ -119,8 +131,10 @@ class TaskController(
     @DeleteMapping("/{taskId}")
     fun deleteTask(
         @PathVariable taskId: String
-    ) {
-        tasksEsService.update(UUID.fromString(taskId)) {
+    ): TaskDeletedEvent {
+        val task = tasksEsService.getState(UUID.fromString(taskId)) ?: throw IllegalArgumentException("Task not found")
+        task.getProjectId()?.let { projectsEsService.getState(it)?.decrementStatusTasks(task.getStatusId()) }
+        return tasksEsService.update(UUID.fromString(taskId)) {
             it.delete(
                 id = UUID.fromString(taskId),
             )

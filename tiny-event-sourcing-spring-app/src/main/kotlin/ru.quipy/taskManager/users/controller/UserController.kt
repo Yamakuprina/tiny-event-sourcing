@@ -54,10 +54,11 @@ class UserController(
 
     @PostMapping("/change")
     fun changeUser(
+        @RequestParam userId: UUID,
         @RequestParam userName: String,
         @RequestParam userPassword: String
     ): UserChangedEvent {
-        return usersEsService.create {
+        return usersEsService.update(userId) {
             it.changeUser(
                 userName = userName,
                 userPassword = userPassword

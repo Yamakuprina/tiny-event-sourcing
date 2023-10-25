@@ -131,6 +131,9 @@ class ProjectController(
     }
 
     @GetMapping("/{projectId}/members")
+    // TODO FIX ERROR ON EVERY EVENT
+    // TODO ADD USER WHEN PROJECT CREATED
+    // TODO PROJECT GET
     fun getMemberNames(
         @PathVariable projectId: String,
     ): List<String> {

@@ -5,77 +5,80 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.repository.MongoRepository
-import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
-import ru.quipy.streams.AggregateSubscriptionsManager
+import org.springframework.stereotype.Service
+import ru.quipy.streams.annotation.AggregateSubscriber
+import ru.quipy.streams.annotation.SubscribeEvent
 import ru.quipy.taskManager.tasks.api.*
-import ru.quipy.taskManager.users.api.UserAggregate
-import ru.quipy.taskManager.users.api.UserChangedEvent
-import ru.quipy.taskManager.users.api.UserCreatedEvent
 import java.util.*
-import javax.annotation.PostConstruct
 
-@Component
+@Service
+@AggregateSubscriber(
+    aggregateClass = TaskAggregate::class, subscriberName = "tasks::tasks-cache"
+)
 class TaskCacheService(
     private val taskCacheRepository: TaskCacheRepository,
-    private val subscriptionsManager: AggregateSubscriptionsManager
 ) {
     private val logger: Logger = LoggerFactory.getLogger(TaskCacheService::class.java)
 
-    @PostConstruct
-    fun init() {
-        subscriptionsManager.createSubscriber(TaskAggregate::class, "tasks::tasks-cache") {
-            `when`(TaskCreatedEvent::class) { event ->
-                val taskCache = TaskCache(
-                    taskId = event.taskId,
-                    name = event.taskName,
-                    statusId = event.statusId,
-                    projectId = event.projectId,
-                    description = event.description,
-                    assignee = event.assignee
-                )
-                taskCacheRepository.save(
-                    taskCache
-                )
-                logger.info("Update task cache, create task $taskCache")
-            }
-            `when`(TaskAssigneeChangedEvent::class) { event ->
-                val cache = taskCacheRepository.findById(event.taskId).get()
-                val taskCache = cache.copy(assignee = event.assignee)
-                taskCacheRepository.save(
-                    taskCache
-                )
-                logger.info("Update task cache, change task $taskCache")
-            }
-            `when`(TaskRemoveAssignmentEvent::class) { event ->
-                val cache = taskCacheRepository.findById(event.taskId).get()
-                val taskCache = cache.copy(assignee = null)
-                taskCacheRepository.save(
-                    taskCache
-                )
-                logger.info("Update task cache, change task $taskCache")
-            }
-            `when`(TaskChangeStatusEvent::class) { event ->
-                val cache = taskCacheRepository.findById(event.taskId).get()
-                val taskCache = cache.copy(statusId = event.newStatusId)
-                taskCacheRepository.save(
-                    taskCache
-                )
-                logger.info("Update task cache, change task $taskCache")
-            }
-            `when`(TaskDeletedEvent::class) { event ->
-                val cache = taskCacheRepository.findById(event.taskId).get()
-                val taskCache = cache.copy(
-                    projectId = null,
-                    assignee = null,
-                    name = ""
-                )
-                taskCacheRepository.save(
-                    taskCache
-                )
-                logger.info("Update task cache, change task $taskCache")
-            }
-        }
+    @SubscribeEvent
+    fun taskCreatedSubscriber(event: TaskCreatedEvent) {
+        val taskCache = TaskCache(
+            taskId = event.taskId,
+            name = event.taskName,
+            statusId = event.statusId,
+            projectId = event.projectId,
+            description = event.description,
+            assignee = event.assignee
+        )
+        taskCacheRepository.save(
+            taskCache
+        )
+        logger.info("Update task cache, create task $taskCache")
+    }
+
+    @SubscribeEvent
+    fun taskChangedSubscriber(event: TaskAssigneeChangedEvent) {
+        val cache = taskCacheRepository.findById(event.taskId).get()
+        val taskCache = cache.copy(assignee = event.assignee)
+        taskCacheRepository.save(
+            taskCache
+        )
+        logger.info("Update task cache, change task $taskCache")
+    }
+
+    @SubscribeEvent
+    fun taskChangedSubscriber(event: TaskRemoveAssignmentEvent) {
+        val cache = taskCacheRepository.findById(event.taskId).get()
+        val taskCache = cache.copy(assignee = null)
+        taskCacheRepository.save(
+            taskCache
+        )
+        logger.info("Update task cache, change task $taskCache")
+    }
+
+    @SubscribeEvent
+    fun taskChangedSubscriber(event: TaskChangeStatusEvent) {
+        val cache = taskCacheRepository.findById(event.taskId).get()
+        val taskCache = cache.copy(statusId = event.newStatusId)
+        taskCacheRepository.save(
+            taskCache
+        )
+        logger.info("Update task cache, change task $taskCache")
+    }
+
+    @SubscribeEvent
+    fun taskChangedSubscriber(event: TaskDeletedEvent) {
+        val cache = taskCacheRepository.findById(event.taskId).get()
+        val taskCache = cache.copy(
+            projectId = null,
+            assignee = null,
+            name = ""
+        )
+        taskCacheRepository.save(
+            taskCache
+        )
+        logger.info("Update task cache, change task $taskCache")
     }
 }
 

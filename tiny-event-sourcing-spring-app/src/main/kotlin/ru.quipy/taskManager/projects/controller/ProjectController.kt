@@ -25,21 +25,33 @@ class ProjectController(
     @PostMapping("/create")
     fun createProject(
         @RequestParam projectName: String,
+        @RequestParam creator: UUID,
     ): ProjectCreatedEvent {
-        return projectsEsService.create {
-            it.createNewProject(
+        return projectsEsService.create { project ->
+            project.createNewProject(
                 projectName = projectName
-            )
+            ).also {
+                project.addMember(creator)
+            }
         }
+    }
+
+    @GetMapping("/{projectId}")
+    fun getProject(
+        @PathVariable projectId: String
+    ): Project? {
+        return projectsEsService.getState(UUID.fromString(projectId))
     }
 
     @PostMapping("/{projectId}/members")
     fun addMember(
         @PathVariable projectId: String,
         @RequestParam member: UUID,
+        @RequestParam invitor: UUID
     ): ProjectMemberAddedEvent {
         val project = projectsEsService.getState(UUID.fromString(projectId))
             ?: throw IllegalArgumentException("Project doesn't exist")
+        if (!project.memberIsPresent(invitor)) throw IllegalArgumentException("Invitor must be in project")
         if (project.memberIsPresent(member)) throw IllegalArgumentException("Member is already present")
         return projectsEsService.update(UUID.fromString(projectId)) {
             it.addMember(member)
@@ -131,9 +143,6 @@ class ProjectController(
     }
 
     @GetMapping("/{projectId}/members")
-    // TODO FIX ERROR ON EVERY EVENT
-    // TODO ADD USER WHEN PROJECT CREATED
-    // TODO PROJECT GET
     fun getMemberNames(
         @PathVariable projectId: String,
     ): List<String> {

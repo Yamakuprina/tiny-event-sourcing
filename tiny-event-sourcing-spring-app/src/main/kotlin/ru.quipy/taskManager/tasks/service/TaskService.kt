@@ -8,15 +8,20 @@ class TaskService(
     val taskCacheRepository: TaskCacheRepository
 ) {
 
-    fun searchTasksByAssignee(assignee: UUID): List<UUID> {
-        return taskCacheRepository.findAll().filter { it.assignee == assignee }.map { it.taskId }
+    fun searchTasksByAssignee(assignee: UUID): List<TaskCache> {
+        return taskCacheRepository.findAll().filter { it.assignee == assignee }
     }
 
-    fun searchTasksByStatus(statusId: UUID): List<UUID> {
-        return taskCacheRepository.findAll().filter { it.statusId == statusId }.map { it.taskId }
+    fun searchTasksByStatus(statusId: UUID): List<TaskCache> {
+        return taskCacheRepository.findAll().filter { it.statusId == statusId }
     }
 
-    fun searchTasksByNameContains(query: String): List<UUID> {
-        return taskCacheRepository.findAll().filter { it.name.contains(query) }.map { it.taskId }
+    fun searchTasksByNameContains(query: String): List<TaskCache> {
+        return taskCacheRepository.findAll().filter { it.name.contains(query) }
     }
+
+    fun getTask(taskId: UUID): TaskCache {
+        return taskCacheRepository.findById(taskId).orElse(null)
+    }
+
 }

@@ -25,20 +25,23 @@ data class ProjectCreatedEvent(
 
 @DomainEvent(name = PROJECT_MEMBER_ADDED)
 data class ProjectMemberAddedEvent(
-    var newMember: UUID,
+    val projectId: UUID,
+    val newMember: UUID,
 ) : Event<ProjectAggregate>(
     name = PROJECT_MEMBER_ADDED,
 )
 
 @DomainEvent(name = PROJECT_MEMBER_REMOVED)
 data class ProjectMemberRemovedEvent(
-    var member: UUID,
+    val projectId: UUID,
+    val member: UUID,
 ) : Event<ProjectAggregate>(
     name = PROJECT_MEMBER_REMOVED,
 )
 
 @DomainEvent(name = PROJECT_STATUS_CREATED)
 data class ProjectNewStatusCreatedEvent(
+    val projectId: UUID,
     val statusId: UUID,
     val statusName: String,
     val color: String,
@@ -49,6 +52,7 @@ data class ProjectNewStatusCreatedEvent(
 
 @DomainEvent(name = PROJECT_STATUS_NAME_CHANGED)
 data class ProjectStatusNameChangedEvent(
+    val projectId: UUID,
     val statusId: UUID,
     val statusName: String,
 ) : Event<ProjectAggregate>(
@@ -57,6 +61,7 @@ data class ProjectStatusNameChangedEvent(
 
 @DomainEvent(name = PROJECT_STATUS_COLOR_CHANGED)
 data class ProjectStatusColorChangedEvent(
+    val projectId: UUID,
     val statusId: UUID,
     val color: String,
 ) : Event<ProjectAggregate>(
@@ -65,6 +70,7 @@ data class ProjectStatusColorChangedEvent(
 
 @DomainEvent(name = PROJECT_STATUS_REMOVED)
 data class ProjectStatusRemovedEvent(
+    val projectId: UUID,
     val statusId: UUID,
 ) : Event<ProjectAggregate>(
     name = PROJECT_STATUS_REMOVED,

@@ -29,7 +29,6 @@ class UserCacheService(
             userId = event.userId,
             userName = event.userName,
             userNickname = event.userNickname,
-            userPassword = event.userPassword
         )
         userCacheRepository.save(
             userCache
@@ -44,7 +43,6 @@ class UserCacheService(
             userId = event.userId,
             userName = event.userName,
             userNickname = cache.userNickname,
-            userPassword = event.userPassword
         )
         userCacheRepository.save(
             userCache
@@ -58,8 +56,7 @@ data class UserCache(
     @Id
     val userId: UUID,
     val userName: String,
-    val userNickname: String,
-    val userPassword: String
+    val userNickname: String
 )
 
 @Repository

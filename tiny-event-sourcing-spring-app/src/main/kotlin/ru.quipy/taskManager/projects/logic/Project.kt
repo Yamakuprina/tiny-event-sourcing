@@ -23,39 +23,42 @@ class Project : AggregateState<UUID, ProjectAggregate> {
         return ProjectCreatedEvent(id, projectName, members, statuses)
     }
 
-    fun addMember(newMember: UUID): ProjectMemberAddedEvent {
-        return ProjectMemberAddedEvent(newMember)
+    fun addMember(projectId: UUID, newMember: UUID): ProjectMemberAddedEvent {
+        return ProjectMemberAddedEvent(projectId, newMember)
     }
 
     fun addStatus(
+        projectId: UUID,
         statusId: UUID = UUID.randomUUID(),
         statusName: String,
         color: String,
         numberOfTasksInStatus: Long
     ): ProjectNewStatusCreatedEvent {
-        return ProjectNewStatusCreatedEvent(statusId, statusName, color, numberOfTasksInStatus)
+        return ProjectNewStatusCreatedEvent(projectId, statusId, statusName, color, numberOfTasksInStatus)
     }
 
     fun changeStatusName(
+        projectId: UUID,
         statusId: UUID,
         statusName: String,
     ): ProjectStatusNameChangedEvent {
-        return ProjectStatusNameChangedEvent(statusId, statusName)
+        return ProjectStatusNameChangedEvent(projectId, statusId, statusName)
     }
 
     fun changeStatusColor(
+        projectId: UUID,
         statusId: UUID,
         statusColor: String,
     ): ProjectStatusColorChangedEvent {
-        return ProjectStatusColorChangedEvent(statusId, statusColor)
+        return ProjectStatusColorChangedEvent(projectId, statusId, statusColor)
     }
 
-    fun removeStatus(statusId: UUID): ProjectStatusRemovedEvent {
-        return ProjectStatusRemovedEvent(statusId)
+    fun removeStatus(projectId: UUID, statusId: UUID): ProjectStatusRemovedEvent {
+        return ProjectStatusRemovedEvent(projectId, statusId)
     }
 
-    fun removeMember(member: UUID): ProjectMemberRemovedEvent {
-        return ProjectMemberRemovedEvent(member)
+    fun removeMember(projectId: UUID, member: UUID): ProjectMemberRemovedEvent {
+        return ProjectMemberRemovedEvent(projectId, member)
     }
 
     fun memberIsPresent(member: UUID): Boolean {

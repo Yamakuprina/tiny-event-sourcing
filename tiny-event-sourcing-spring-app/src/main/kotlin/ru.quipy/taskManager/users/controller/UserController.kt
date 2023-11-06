@@ -11,6 +11,7 @@ import ru.quipy.taskManager.users.api.UserAggregate
 import ru.quipy.taskManager.users.api.UserChangedEvent
 import ru.quipy.taskManager.users.api.UserCreatedEvent
 import ru.quipy.taskManager.users.logic.User
+import ru.quipy.taskManager.users.service.UserCache
 import ru.quipy.taskManager.users.service.UserService
 import java.util.*
 
@@ -43,13 +44,13 @@ class UserController(
     }
 
     @GetMapping("/search/name")
-    fun getUsersNameContain(@RequestParam query: String): List<User> {
-        return userService.searchUsersNameContains(query).mapNotNull { usersEsService.getState(it) }
+    fun getUsersNameContains(@RequestParam query: String): List<UserCache> {
+        return userService.searchUsersNameContains(query)
     }
 
     @GetMapping("/{userId}")
-    fun getUser(@PathVariable userId: UUID): User? {
-        return usersEsService.getState(userId)
+    fun getUser(@PathVariable userId: UUID): UserCache? {
+        return userService.getUser(userId)
     }
 
     @PostMapping("/change")

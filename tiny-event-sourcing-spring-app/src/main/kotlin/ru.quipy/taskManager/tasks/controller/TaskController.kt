@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RestController
 import ru.quipy.core.EventSourcingService
 import ru.quipy.taskManager.projects.api.ProjectAggregate
 import ru.quipy.taskManager.projects.logic.Project
+import ru.quipy.taskManager.projects.logic.Status
 import ru.quipy.taskManager.tasks.api.*
 import ru.quipy.taskManager.tasks.logic.Task
+import ru.quipy.taskManager.tasks.service.TaskCache
 import ru.quipy.taskManager.tasks.service.TaskService
 import java.util.*
 
@@ -73,29 +75,36 @@ class TaskController(
     @GetMapping("/{taskId}")
     fun getTask(
         @PathVariable taskId: String,
-    ): Task? {
-        return tasksEsService.getState(UUID.fromString(taskId))
+    ): TaskCache? {
+        return taskService.getTask(UUID.fromString(taskId))
     }
 
     @GetMapping("/search/assignee")
     fun searchTasksByAssignee(
         @RequestParam assignee: UUID,
-    ): List<Task> {
-        return taskService.searchTasksByAssignee(assignee).mapNotNull { tasksEsService.getState(it) }
+    ): List<TaskCache> {
+        return taskService.searchTasksByAssignee(assignee)
     }
 
     @GetMapping("/search/status")
     fun searchTasksByStatus(
         @RequestParam statusId: UUID,
-    ): List<Task> {
-        return taskService.searchTasksByStatus(statusId).mapNotNull { tasksEsService.getState(it) }
+    ): List<TaskCache> {
+        return taskService.searchTasksByStatus(statusId)
+    }
+
+    @GetMapping("/search/project")
+    fun searchTasksByProjectStatuses(@RequestParam projectId: UUID): Map<Status, List<TaskCache>> {
+        val statuses = projectsEsService.getState(projectId)?.getStatuses()
+            ?: throw IllegalArgumentException("Project not found")
+        return statuses.associateWith { taskService.searchTasksByStatus(it.id) }
     }
 
     @GetMapping("/search/name")
     fun searchTasksByNameContains(
         @RequestParam query: String,
-    ): List<Task> {
-        return taskService.searchTasksByNameContains(query).mapNotNull { tasksEsService.getState(it) }
+    ): List<TaskCache> {
+        return taskService.searchTasksByNameContains(query)
     }
 
     @PostMapping("/{taskId}/status")

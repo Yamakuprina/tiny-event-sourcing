@@ -12,7 +12,11 @@ class UserService(
         return !users.any { it.userNickname == nickname }
     }
 
-    fun searchUsersNameContains(query: String): List<UUID> {
-        return userCacheRepository.findAll().filter { it.userName.contains(query) }.map { it.userId }
+    fun searchUsersNameContains(query: String): List<UserCache> {
+        return userCacheRepository.findAll().filter { it.userName.contains(query) }
+    }
+
+    fun getUser(userId: UUID): UserCache? {
+        return userCacheRepository.findById(userId).orElse(null)
     }
 }

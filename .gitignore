@@ -1,7 +1,7 @@
 # Project exclude paths
 **/target/
 *.iml
-/.idea/
+*/.idea/
 # IDEA files
 
 .idea/libraries/**
